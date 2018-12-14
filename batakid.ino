@@ -28,6 +28,13 @@ void setup
 	toutesLeds(OFF);
 }
 
+void chenillard(unsigned long aDelai, byte aNombre=1, bool aAttendreFin=true)
+{
+	//faire une classe dérivée de yasm pour rendre une variable de délai accessible
+	//ensuite une SM de cette classe pout faire le chenillard
+}
+
+
 void affiche()
 { 
 	for (byte i=0; i<BTN_NBR; i++)
