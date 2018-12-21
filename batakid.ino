@@ -4,8 +4,7 @@
  *                                                                                   *
  *************************************************************************************/
 
-#include "yasm.h"
-#include "btn.h"
+#include "yasm.h" // http://forum.arduino.cc/index.php?topic=525092
 
 /****définitions relatives aux leds et aux boutons************************************/
 #define ON true
@@ -28,12 +27,32 @@ void toutesLeds(bool aEtat)
 	affiche();
 }
 
+uint8_t BoutonActuel=0;
+
+void lireBoutons()
+{
+	BoutonActuel=0;
+	for (uint8_t i=0; i<BTN_NBR; i++) {
+		if (digitalRead(BtnPin[i])==LOW) {
+			BoutonActuel = i+1;
+			return;
+		}
+	}
+}
+
 /****** fonction de chenillard ******************************************************/
 YASM ChenSM;
+
 unsigned long ChenDelai;
+
 int8_t ChenNbr;
+
 void chenillard(unsigned long aDelai, int8_t aNombre=1, bool aAttendreFin=true)
 {
+	if(aDelai==0) {
+		ChenSM.stop();
+		return;
+	}	
 	ChenDelai = aDelai;
 	ChenNbr = aNombre;
 	ChenSM.next(chen);
@@ -67,9 +86,49 @@ void chen()
 		digitalWrite(LedPin[temp], !digitalRead(LedPin[temp]));
 }
 
+/***** tache de fond*************************/
+YASM Programme;
 
+void Prg_init()
+{
+	if (Programme.isFirstRun()) 
+		for (int8_t i=0, i=2, i++) 
+			LedState[i]=ON;
+	
+	switch (BoutonActuel) {
+		case 1:
+			Programme.next(Prg_jeu1);
+			toutesLeds(OFF);
+			break;
+		case 2:
+			Programme.next(Prg_jeu2);
+			toutesLeds(OFF);
+			break;
+		case 3:
+			Programme.next(Prg_jeu3);
+			toutesLeds(OFF);
+			break;
+	}
+}
 
+void Prg_jeu1()
+{
+	//allume/éteint chaque led
+	if (BoutonActuel)
+		LedState[BoutonActuel-1]=!LedState[BoutonActuel-1];
+}
 
+void Prg_jeu2()
+{
+	//chenillard avec plus ou moins de leds
+	if (BoutonActuel)
+		chenillard(50, BoutonActuel, false);
+}
+
+void Prg_jeu3()
+{
+	//allume/eteint chaque led dans l'ordre
+}
 
 
 
@@ -80,13 +139,19 @@ void setup()
 		pinMode(BtnPin[i],INPUT_PULLUP);
 	}
 	
-	chenillard(50, 3, true);
+	chenillard(50, 2, true);
 	toutesLeds(ON);
 	chenillard(50, 4, true);
 	toutesLeds(OFF);
+	
+	Programme.next(Prg_init);
 }
 
 void loop()
 {
+	lireBoutons();
+	Programme.run();
+	ChenSM.run();
 	
+	affiche();
 }
