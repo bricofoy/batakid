@@ -49,7 +49,7 @@ int8_t ChenNbr;
 
 void chenillard(unsigned long aDelai, int8_t aNombre=1, bool aAttendreFin=true)
 {
-	if(aDelai==0) {
+	if( aDelai==0 ) {
 		ChenSM.stop();
 		return;
 	}	
@@ -66,7 +66,7 @@ void chen()
 	
 	if( ChenSM.isFirstRun() )
 		position = 0;
-
+	
 	if( position = (BTN_NBR-1+ChenNbr) ) {
 		//si on est arrivé au bout de la chenille, on stoppe le chenillard
 		ChenSM.stop();
@@ -122,7 +122,7 @@ void Prg_jeu2()
 {
 	//chenillard avec plus ou moins de leds
 	if (BoutonActuel)
-		chenillard(50, BoutonActuel, false);
+		chenillard(100, BoutonActuel, false);
 }
 
 void Prg_jeu3()
