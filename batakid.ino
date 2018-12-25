@@ -1,40 +1,39 @@
 /*************************************************************************************
  *                                                                                   *
- *     Jeu type "batak" minimaliste pour enfant sur base arduino                     *
+ *       Jeu type "batak" minimaliste pour enfant sur base arduino
  *                                                                                   *
  *************************************************************************************/
 
 #include "yasm.h" // http://forum.arduino.cc/index.php?topic=525092
+#include "btn.h"
+#include <Streaming.h> // https://github.com/janelia-arduino/Streaming
 
 /****définitions relatives aux leds et aux boutons************************************/
-#define ON true
-#define OFF false
+#define ON HIGH
+#define OFF LOW
 #define BTN_NBR 10
-const int8_t LedPin[BTN_NBR]={13,12,11,10,9,8,7,6,5,4};
-const int8_t BtnPin[BTN_NBR]={};
-bool LedState[BTN_NBR]={0};
-
-void affiche()
-{ 
-	for(int8_t i=0; i<BTN_NBR; i++)
-		digitalWrite(LedPin[i], LedState[i]);
-}
+const int8_t BtnPin[BTN_NBR] = {44, 42, 40, 38, 36, 34, 32, 30, 26, 28};
+const int8_t LedPin[BTN_NBR] = {45, 43, 41, 39, 37, 35, 33, 31, 27, 29};
 
 void toutesLeds(bool aEtat)
 {
-	for(int8_t i=0; i<BTN_NBR; i++)
-		LedState[i]=aEtat;
-	affiche();
+	for (int8_t i = 0; i < BTN_NBR; i++)
+		digitalWrite(LedPin[i], aEtat);
 }
 
-uint8_t BoutonActuel=0;
+BTN Bouton[BTN_NBR];
+int8_t BoutonActuel;
 
 void lireBoutons()
 {
-	BoutonActuel=0;
-	for (uint8_t i=0; i<BTN_NBR; i++) {
-		if (digitalRead(BtnPin[i])==LOW) {
-			BoutonActuel = i+1;
+	BoutonActuel = -1;
+	
+	for (uint8_t i = 0; i < BTN_NBR; i++) 
+		Bouton[i].update(!digitalRead(BtnPin[i]));
+	
+	for (uint8_t i = 0; i < BTN_NBR; i++) {
+		if (Bouton[i].state(BTN_CLICK)) {
+			BoutonActuel = i;
 			return;
 		}
 	}
@@ -42,48 +41,62 @@ void lireBoutons()
 
 /****** fonction de chenillard ******************************************************/
 YASM ChenSM;
-
 unsigned long ChenDelai;
-
 int8_t ChenNbr;
 
-void chenillard(unsigned long aDelai, int8_t aNombre=1, bool aAttendreFin=true)
+void chenillard(unsigned long aDelai, int8_t aNombre = 1, bool aAttendreFin = true)
 {
-	if( aDelai==0 ) {
+	if ( aDelai == 0 ) {
 		ChenSM.stop();
 		return;
-	}	
+	}
 	ChenDelai = aDelai;
 	ChenNbr = aNombre;
 	ChenSM.next(chen);
-	if( aAttendreFin )
-		while( ChenSM.run() );
+	if ( aAttendreFin )
+		while ( ChenSM.run() ) {}
 }
 
 void chen()
 {
-	static int8_t position;
+	static uint8_t position;
 	
-	if( ChenSM.isFirstRun() )
+	if ( ChenSM.isFirstRun() )
 		position = 0;
 	
-	if( position = (BTN_NBR-1+ChenNbr) ) {
-		//si on est arrivé au bout de la chenille, on stoppe le chenillard
-		ChenSM.stop();
-		//et on remet le dernière led utilisée dans son état initial
-		digitalWrite(LedPin[BTN_NBR-1], !digitalRead(LedPin[BTN_NBR-1]));
-		//puis on quitte avant de rallumer un truc
-		return;
+	if ( ChenSM.periodic(ChenDelai) ) {
+		if ( position == (BTN_NBR + ChenNbr) ) {
+			//si on est arrivé au bout de la chenille, on stoppe le chenillard
+			ChenSM.stop();
+			//et on remet le dernière led utilisée dans son état initial
+			digitalWrite(LedPin[0], !digitalRead(LedPin[0]));
+			//puis on quitte avant de rallumer un truc
+			return;
+		}
+		
+		//basculement de l'état de la led courante
+		if ( position < BTN_NBR )
+			digitalWrite(LedPin[position], !digitalRead(LedPin[position]));
+		else if ( position == BTN_NBR )
+			digitalWrite(LedPin[0], !digitalRead(LedPin[0]));
+		
+		//extinction de la dernière led de la chenille
+		int8_t temp = (position - ChenNbr);
+		if ( (temp) > -1)
+			if ( temp < BTN_NBR )
+				digitalWrite(LedPin[temp], !digitalRead(LedPin[temp]));
+			else if ( temp == BTN_NBR )
+				digitalWrite(LedPin[0], !digitalRead(LedPin[0]));
+			
+			position++;
 	}
-	
-	//basculement de l'état de la led courante
-	if( position<BTN_NBR )
-		digitalWrite(LedPin[position], !digitalRead(LedPin[position]));
-	
-	//extinction de la dernière led de la chenille
-	int8_t temp = (position-ChenNbr);
-	if( (temp) > -1)
-		digitalWrite(LedPin[temp], !digitalRead(LedPin[temp]));
+}
+
+void animationFin()
+{
+	toutesLeds(OFF);
+	chenillard(30,2);
+	chenillard(30,10);
 }
 
 /***** tache de fond*************************/
@@ -91,58 +104,98 @@ YASM Programme;
 
 void Prg_init()
 {
-	if (Programme.isFirstRun()) 
-		for (int8_t i=0, i=2, i++) 
-			LedState[i]=ON;
+	if (Programme.isFirstRun())
+		toutesLeds(OFF);
+	
+	if (Programme.periodic(700)) {
+		digitalWrite(LedPin[9], !digitalRead(LedPin[9]));
+		digitalWrite(LedPin[0], !digitalRead(LedPin[0]));
+		digitalWrite(LedPin[1], !digitalRead(LedPin[1]));
+	}
 	
 	switch (BoutonActuel) {
-		case 1:
+		case 9:
 			Programme.next(Prg_jeu1);
-			toutesLeds(OFF);
 			break;
-		case 2:
+		case 0:
 			Programme.next(Prg_jeu2);
-			toutesLeds(OFF);
 			break;
-		case 3:
+		case 1:
 			Programme.next(Prg_jeu3);
-			toutesLeds(OFF);
 			break;
 	}
 }
 
 void Prg_jeu1()
-{
+{	
 	//allume/éteint chaque led
-	if (BoutonActuel)
-		LedState[BoutonActuel-1]=!LedState[BoutonActuel-1];
+	
+	if (Programme.isFirstRun()) 
+		toutesLeds(OFF);
+	
+	if ( BoutonActuel != -1 ) 
+		digitalWrite(LedPin[BoutonActuel] , !digitalRead(LedPin[BoutonActuel]));
+	
+	if ( Programme.periodic(3000) ) 
+	{
+		int8_t nombre = 0;
+		for (int8_t i = 0; i<BTN_NBR; i++)
+			nombre += (digitalRead(LedPin[i])==ON);
+		if ( nombre == BTN_NBR ) {
+			animationFin();
+			Programme.next(Prg_init);
+		}
+	}
 }
 
 void Prg_jeu2()
 {
 	//chenillard avec plus ou moins de leds
-	if (BoutonActuel)
-		chenillard(100, BoutonActuel, false);
+	
+	if (Programme.isFirstRun()) 
+		toutesLeds(OFF);
+	
+	if ( BoutonActuel != -1 )
+		chenillard(400, BoutonActuel+1, false);
 }
 
 void Prg_jeu3()
-{
+{	
 	//allume/eteint chaque led dans l'ordre
+	static uint8_t position;
+	
+	if (Programme.isFirstRun()) {
+		toutesLeds(OFF);
+		position=0;
+	}
+	
+	if ( (position == 10) && (BoutonActuel == 0) )
+		Programme.next(Prg_init);
+	
+	if ( BoutonActuel == position ) {
+		digitalWrite(LedPin[position], ON);
+		position++;
+		return; //ici il faut quitter immédiatement sinon le test suivant annule l'action en cours !
+	}
+	
+	if ( (BoutonActuel != -1) && (BoutonActuel == (position-1)) ) {
+		position--;
+		digitalWrite(LedPin[position], OFF);
+	}
 }
 
 
 
 void setup()
 {
-	for(int8_t i=0; i<BTN_NBR; i++) {
-		pinMode(LedPin[i],OUTPUT);
-		pinMode(BtnPin[i],INPUT_PULLUP);
+	for (int8_t i = 0; i < BTN_NBR; i++) {
+		pinMode(LedPin[i], OUTPUT);
+		pinMode(BtnPin[i], INPUT_PULLUP);
 	}
 	
-	chenillard(50, 2, true);
-	toutesLeds(ON);
-	chenillard(50, 4, true);
-	toutesLeds(OFF);
+	Serial.begin(115200); 
+	
+	animationFin();
 	
 	Programme.next(Prg_init);
 }
@@ -150,8 +203,9 @@ void setup()
 void loop()
 {
 	lireBoutons();
+	
 	Programme.run();
 	ChenSM.run();
 	
-	affiche();
+	
 }
