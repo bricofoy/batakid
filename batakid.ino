@@ -95,6 +95,18 @@ void chen()
 void animationFin()
 {
 	toutesLeds(OFF);
+	delay(60);
+	toutesLeds(ON);
+	delay(60);
+	toutesLeds(OFF);
+	delay(60);
+	toutesLeds(ON);
+	delay(60);
+	toutesLeds(OFF);
+	delay(60);
+	toutesLeds(ON);
+	delay(60);
+	toutesLeds(OFF);
 	chenillard(30,2);
 	chenillard(30,10);
 }
@@ -136,16 +148,17 @@ void Prg_jeu1()
 	if ( BoutonActuel != -1 ) 
 		digitalWrite(LedPin[BoutonActuel] , !digitalRead(LedPin[BoutonActuel]));
 	
-	if ( Programme.periodic(3000) ) 
-	{
-		int8_t nombre = 0;
-		for (int8_t i = 0; i<BTN_NBR; i++)
-			nombre += (digitalRead(LedPin[i])==ON);
-		if ( nombre == BTN_NBR ) {
-			animationFin();
-			Programme.next(Prg_init);
-		}
+	//test pour voir si toutes leds allumées :
+	int8_t nombre = 0;
+	for (int8_t i = 0; i<BTN_NBR; i++)
+		nombre += (digitalRead(LedPin[i])==ON);
+	if ( nombre == BTN_NBR ) {
+		delay(400); //sinon c'est pas beau
+		animationFin();
+		Programme.next(Prg_init);
 	}
+	
+	
 }
 
 void Prg_jeu2()
@@ -169,8 +182,11 @@ void Prg_jeu3()
 		position=0;
 	}
 	
-	if ( (position == 10) && (BoutonActuel == 0) )
+	if ( position == 10 ) {
+		delay(400); //sinon c'est pas beau
+		animationFin();
 		Programme.next(Prg_init);
+	}
 	
 	if ( BoutonActuel == position ) {
 		digitalWrite(LedPin[position], ON);
@@ -189,23 +205,19 @@ void Prg_jeu3()
 void setup()
 {
 	for (int8_t i = 0; i < BTN_NBR; i++) {
+		//paramétrage des broches utilisées
 		pinMode(LedPin[i], OUTPUT);
 		pinMode(BtnPin[i], INPUT_PULLUP);
 	}
 	
-	Serial.begin(115200); 
-	
+	//Serial.begin(115200); 
 	animationFin();
-	
 	Programme.next(Prg_init);
 }
 
 void loop()
 {
 	lireBoutons();
-	
 	Programme.run();
 	ChenSM.run();
-	
-	
 }
