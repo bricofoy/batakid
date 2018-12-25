@@ -42,6 +42,19 @@ void lireBoutons()
 }
 
 /******** fonction de mise en veille *************************************************/
+YASM Veille;
+
+void veille()
+{
+	if (BoutonActuel != -1)
+		Veille.next(veille,true); // si un bouton est appuyé on re-rentre dans l'état pour remettre à zéro le compteur
+		
+		if ( Veille.elapsed(600E3)) 
+			//Si on est dans l'état depuis 10 minutes (600*10^3millisecondes) sans actions
+			//sur les boutons, alors on met le circuit en veille : 
+			faisDodo();
+}
+
 #include <avr/sleep.h> // https://playground.arduino.cc/Learning/arduinoSleepCode
 void faisDodo()
 {
@@ -54,34 +67,34 @@ void faisDodo()
 }
 
 /****** fonction de chenillard ******************************************************/
-YASM ChenSM;
+YASM Chenillard;
 unsigned long ChenDelai;
 int8_t ChenNbr;
 
 void chenillard(unsigned long aDelai, int8_t aNombre = 1, bool aAttendreFin = true)
 {
 	if ( aDelai == 0 ) {
-		ChenSM.stop();
+		Chenillard.stop();
 		return;
 	}
 	ChenDelai = aDelai;
 	ChenNbr = aNombre;
-	ChenSM.next(chen);
+	Chenillard.next(chen);
 	if ( aAttendreFin )
-		while ( ChenSM.run() ) {}
+		while ( Chenillard.run() ) {}
 }
 
 void chen()
 {
 	static uint8_t position;
 	
-	if ( ChenSM.isFirstRun() )
+	if ( Chenillard.isFirstRun() )
 		position = 0;
 	
-	if ( ChenSM.periodic(ChenDelai) ) {
+	if ( Chenillard.periodic(ChenDelai) ) {
 		if ( position == (BTN_NBR + ChenNbr) ) {
 			//si on est arrivé au bout de la chenille, on stoppe le chenillard
-			ChenSM.stop();
+			Chenillard.stop();
 			//et on remet le dernière led utilisée dans son état initial
 			digitalWrite(LedPin[0], !digitalRead(LedPin[0]));
 			//puis on quitte avant de rallumer un truc
@@ -125,10 +138,12 @@ void animationFin()
 	chenillard(30,10);
 }
 
-/***** tache de fond*************************/
+
+
+/***** Programme principal ********************/
 YASM Programme;
 
-void Prg_init()
+void prg_init()
 {
 	if (Programme.isFirstRun())
 		toutesLeds(OFF);
@@ -141,21 +156,20 @@ void Prg_init()
 	
 	switch (BoutonActuel) {
 		case 9:
-			Programme.next(Prg_jeu1);
+			Programme.next(prg_jeu1);
 			break;
 		case 0:
-			Programme.next(Prg_jeu2);
+			Programme.next(prg_jeu2);
 			break;
 		case 1:
-			Programme.next(Prg_jeu3);
+			Programme.next(prg_jeu3);
 			break;
 	}
 	
-	if ( Programme.elapsed(600E3)) // 10 minutes
-		faisDodo();
+
 }
 
-void Prg_jeu1()
+void prg_jeu1()
 {	
 	//allume/éteint chaque led
 	
@@ -172,14 +186,13 @@ void Prg_jeu1()
 	if ( nombre == BTN_NBR ) {
 		delay(400); //sinon c'est pas beau
 		animationFin();
-		Programme.next(Prg_init);
+		Programme.next(prg_init);
 	}
 	
-	if ( Programme.elapsed(600E3)) // 10 minutes
-		faisDodo();
+
 }
 
-void Prg_jeu2()
+void prg_jeu2()
 {
 	//chenillard avec plus ou moins de leds
 	
@@ -189,11 +202,10 @@ void Prg_jeu2()
 	if ( BoutonActuel != -1 )
 		chenillard(400, BoutonActuel+1, false);
 	
-	if ( Programme.elapsed(600E3)) // 10 minutes
-		faisDodo();
+
 }
 
-void Prg_jeu3()
+void prg_jeu3()
 {	
 	//allume/eteint chaque led dans l'ordre
 	static uint8_t position;
@@ -206,7 +218,7 @@ void Prg_jeu3()
 	if ( position == 10 ) {
 		delay(400); //sinon c'est pas beau
 		animationFin();
-		Programme.next(Prg_init);
+		Programme.next(prg_init);
 	}
 	
 	if ( BoutonActuel == position ) {
@@ -220,8 +232,7 @@ void Prg_jeu3()
 		digitalWrite(LedPin[position], OFF);
 	}
 	
-	if ( Programme.elapsed(600E3)) // 10 minutes
-		faisDodo();
+
 }
 
 
@@ -236,12 +247,14 @@ void setup()
 	
 	//Serial.begin(115200); 
 	animationFin();
-	Programme.next(Prg_init);
+	Programme.next(prg_init);
+	Veille.next(veille);
 }
 
 void loop()
 {
 	lireBoutons();
+	Veille.run();
 	Programme.run();
-	ChenSM.run();
+	Chenillard.run();
 }
