@@ -8,6 +8,8 @@
 #include "btn.h"
 #include <Streaming.h> // https://github.com/janelia-arduino/Streaming
 
+
+
 /****définitions relatives aux leds et aux boutons************************************/
 #define ON HIGH
 #define OFF LOW
@@ -37,6 +39,18 @@ void lireBoutons()
 			return;
 		}
 	}
+}
+
+/******** fonction de mise en veille *************************************************/
+#include <avr/sleep.h> // https://playground.arduino.cc/Learning/arduinoSleepCode
+void faisDodo()
+{
+	animationFin();
+	animationFin();
+	toutesLeds(OFF);
+	set_sleep_mode(SLEEP_MODE_PWR_DOWN); 
+	sleep_enable(); 
+	sleep_mode(); // adieu mondre cruel !
 }
 
 /****** fonction de chenillard ******************************************************/
@@ -136,6 +150,9 @@ void Prg_init()
 			Programme.next(Prg_jeu3);
 			break;
 	}
+	
+	if ( Programme.elapsed(600E3)) // 10 minutes
+		faisDodo();
 }
 
 void Prg_jeu1()
@@ -158,7 +175,8 @@ void Prg_jeu1()
 		Programme.next(Prg_init);
 	}
 	
-	
+	if ( Programme.elapsed(600E3)) // 10 minutes
+		faisDodo();
 }
 
 void Prg_jeu2()
@@ -170,6 +188,9 @@ void Prg_jeu2()
 	
 	if ( BoutonActuel != -1 )
 		chenillard(400, BoutonActuel+1, false);
+	
+	if ( Programme.elapsed(600E3)) // 10 minutes
+		faisDodo();
 }
 
 void Prg_jeu3()
@@ -198,6 +219,9 @@ void Prg_jeu3()
 		position--;
 		digitalWrite(LedPin[position], OFF);
 	}
+	
+	if ( Programme.elapsed(600E3)) // 10 minutes
+		faisDodo();
 }
 
 
