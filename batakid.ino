@@ -92,7 +92,7 @@ void chen()
 		position = 0;
 	
 	if ( Chenillard.periodic(ChenDelai) ) {
-		if ( position == (BTN_NBR + ChenNbr) ) {
+		if ( position >= (BTN_NBR + ChenNbr) ) {
 			//si on est arrivé au bout de la chenille, on stoppe le chenillard
 			Chenillard.stop();
 			//et on remet le dernière led utilisée dans son état initial
@@ -209,7 +209,7 @@ void prg_jeu2()
 	}
 	
 	if ( Programme.elapsed(180E3))
-		//si 3 minutes (180*10^3ms) sont écoulées sans actions, on quitte le jeu
+		//si 3 minutes (180*10^3 ms) sont écoulées sans actions, on quitte le jeu
 		Programme.next(prg_init);
 	
 	//test pour voir si toutes leds allumées :
