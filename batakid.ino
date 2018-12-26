@@ -1,6 +1,6 @@
 /*************************************************************************************
  *                                                                                   *
- *       Jeu type "batak" minimaliste pour enfant sur base arduino
+ *       Jeu type "batak" minimaliste pour enfant sur base arduino                   *
  *                                                                                   *
  *************************************************************************************/
 
@@ -196,13 +196,31 @@ void prg_jeu2()
 {
 	//chenillard avec plus ou moins de leds
 	
-	if (Programme.isFirstRun()) 
+	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
+		for (uint8_t i=0; i<random(9); i++)
+			digitalWrite(LedPin[random(9)], !digitalRead(LedPin[random(9)]));
+		chenillard(50,6);
+	}
 	
-	if ( BoutonActuel != -1 )
+	if ( BoutonActuel != -1 ) {
 		chenillard(400, BoutonActuel+1, false);
+		Programme.next(prg_jeu2, true); //remise à zéro des compteurs de temps
+	}
 	
-
+	if ( Programme.elapsed(180E3))
+		//si 3 minutes (180*10^3ms) sont écoulées sans actions, on quitte le jeu
+		Programme.next(prg_init);
+	
+	//test pour voir si toutes leds allumées :
+	int8_t nombre = 0;
+	for (int8_t i = 0; i<BTN_NBR; i++)
+		nombre += (digitalRead(LedPin[i])==ON);
+	if ( nombre == BTN_NBR ) {
+		delay(400); //sinon c'est pas beau
+		animationFin();
+		Programme.next(prg_init);
+	}
 }
 
 void prg_jeu3()
@@ -244,6 +262,7 @@ void setup()
 		pinMode(LedPin[i], OUTPUT);
 		pinMode(BtnPin[i], INPUT_PULLUP);
 	}
+	randomSeed(analogRead(A0));
 	
 	//Serial.begin(115200); 
 	animationFin();
