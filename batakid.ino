@@ -204,7 +204,7 @@ void prg_jeu2()
 	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
 		for (uint8_t i=0; i<random(9); i++)
-			digitalWrite(LedPin[random(9)], !digitalRead(LedPin[random(9)]));
+			changeLed(LedPin[random(9)]);
 		chenillard(50,6);
 	}
 	
