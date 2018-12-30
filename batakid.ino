@@ -180,12 +180,10 @@ void prg_init()
 		changeLed(1);
 		changeLed(2);
 		changeLed(3);
+		changeLed(9);
 	}
 	
 	switch (BoutonActuel) {
-		case 10:
-			Programme.next(prg_jeu1);
-			break;
 		case 1:
 			Programme.next(prg_jeu2);
 			break;
@@ -195,24 +193,27 @@ void prg_init()
 		case 3:
 			Programme.next(prg_jeu4);
 			break;
-		/*case 3:
-			//Programme.next(prg_jeu5);
-			break;
 		case 4:
-			//Programme.next(prg_jeu6);
+			//Programme.next(prg_jeu4);
 			break;
 		case 5:
-			//Programme.next(prg_jeu7);
+			//Programme.next(prg_jeu5);
 			break;
 		case 6:
-			//Programme.next(prg_jeu8);
+			//Programme.next(prg_jeu6);
 			break;
 		case 7:
-			//Programme.next(prg_jeu9);
+			//Programme.next(prg_jeu7);
 			break;
 		case 8:
-			//Programme.next(prg_jeu10);
-			break;*/
+			//Programme.next(prg_jeu8);
+			break;
+		case 9:
+			Programme.next(prg_jeu6);
+			break;
+		case 10:
+			Programme.next(prg_jeu1);
+			break;
 	}
 	
 
@@ -245,7 +246,7 @@ void prg_jeu2()
 	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
 		for (uint8_t i=0; i<(random(9)+1); i++)
-			changeLed( random(9)+1 );
+			changeLed( random(9)+1 ); //ici on fait random(9)+1 pour etre entre 1 et 10 au lieu de 0 et 9
 		chenillard(50,6);
 	}
 	
@@ -340,6 +341,7 @@ void prg_jeu5()
 void prg_jeu6()
 {
 	//addition : allumer 10, puis quand on allume un autre bouton, il faut ensuite allumer le complémentaire pour faire 10, sinon ça se re-éteinds
+	
 }
 
 void setup()
