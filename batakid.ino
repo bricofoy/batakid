@@ -282,7 +282,26 @@ void prg_jeu3()
 
 void prg_jeu4()
 {
+	//intérieur pour autoriser extérieur
+	if (Programme.isFirstRun()) {
+		chenillard(20,10);
+		toutesLeds(OFF);
+	}
 	
+	if (BoutonActuel != -1) {
+		Serial << "bouton ! "<< BoutonActuel << " ";
+		if ( !(BoutonActuel & 1) ) { //si le numero du bouton est impair (car en binaire le bit de poids fort est toujours 0 pour un nombre pair)
+			changeLed(BoutonActuel);
+			Serial << "pair"<<endl;
+			
+		}
+		
+	}
+}
+
+void prg_jeu5()
+{
+	//par couleurs
 }
 
 
@@ -296,7 +315,7 @@ void setup()
 	}
 	randomSeed(analogRead(A0));
 	
-	//Serial.begin(115200); 
+	Serial.begin(115200); 
 	animationFin();
 	Programme.next(prg_init);
 	Veille.next(veille);
