@@ -157,6 +157,7 @@ void prg_init()
 		changeLed(LedPin[9]);
 		changeLed(LedPin[0]);
 		changeLed(LedPin[1]);
+		changeLed(LedPin[2]);
 	}
 	
 	switch (BoutonActuel) {
@@ -169,6 +170,27 @@ void prg_init()
 		case 1:
 			Programme.next(prg_jeu3);
 			break;
+		case 2:
+			Programme.next(prg_jeu4);
+			break;
+		/*case 3:
+			//Programme.next(prg_jeu5);
+			break;
+		case 4:
+			//Programme.next(prg_jeu6);
+			break;
+		case 5:
+			//Programme.next(prg_jeu7);
+			break;
+		case 6:
+			//Programme.next(prg_jeu8);
+			break;
+		case 7:
+			//Programme.next(prg_jeu9);
+			break;
+		case 8:
+			//Programme.next(prg_jeu10);
+			break;*/
 	}
 	
 
@@ -256,6 +278,11 @@ void prg_jeu3()
 	}
 	
 
+}
+
+void prg_jeu4()
+{
+	
 }
 
 
