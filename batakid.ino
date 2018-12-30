@@ -40,9 +40,9 @@ bool etatLed(int8_t aNumero)
 
 bool toutAllume()
 {
-	//test pour voir si toutes leds allumées :
+	//test pour voir si toutes leds sont allumées :
 	int8_t nombre = 0;
-	for (int8_t i = 0; i<BTN_NBR; i++)
+	for (int8_t i = 1; i<=BTN_NBR; i++)
 		nombre += (etatLed(i)==ON);
 	if ( nombre == BTN_NBR )
 		return true;
