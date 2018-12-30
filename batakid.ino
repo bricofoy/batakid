@@ -336,11 +336,40 @@ void prg_jeu4()
 void prg_jeu5()
 {
 	//par couleurs
+	Programme.next(prg_init);
 }
 
 void prg_jeu6()
 {
 	//addition : allumer 10, puis quand on allume un autre bouton, il faut ensuite allumer le complémentaire pour faire 10, sinon ça se re-éteinds
+	
+	static int8_t boutonPrecedent;
+	
+	if (Programme.isFirstRun()) {
+		toutesLeds(OFF);
+		//changeLed(10,ON);
+		boutonPrecedent = 0;
+	}
+	
+	if (BoutonActuel){
+		if (!etatLed(BoutonActuel)) {
+			if (boutonPrecedent+BoutonActuel==10)
+				changeLed(BoutonActuel);
+			else {
+				changeLed(BoutonActuel);
+				changeLed(boutonPrecedent);
+			}
+		}
+		else
+			changeLed(BoutonActuel);
+		boutonPrecedent=BoutonActuel;
+	}
+	
+	if ( toutAllume() ) {
+		delay(400); //sinon c'est pas beau
+		animationFin();
+		Programme.next(prg_init);
+	}
 	
 }
 
