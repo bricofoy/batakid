@@ -25,17 +25,17 @@ void toutesLeds(bool aEtat)
 
 void changeLed(int8_t aNumero)
 {
-	digitalWrite(LedPin[aNumero], !digitalRead(LedPin[aNumero]));	
+	digitalWrite(LedPin[aNumero-1], !digitalRead(LedPin[aNumero-1]));	
 }
 
 void changeLed(int8_t aNumero, bool aEtat)
 {
-	digitalWrite(LedPin[aNumero], aEtat);	
+	digitalWrite(LedPin[aNumero-1], aEtat);	
 }
 
 bool etatLed(int8_t aNumero)
 {
-	return digitalRead(LedPin[aNumero])==ON;
+	return digitalRead(LedPin[aNumero-1])==ON;
 }
 
 bool toutAllume()
@@ -54,14 +54,14 @@ int8_t BoutonActuel;
 
 void lireBoutons()
 {
-	BoutonActuel = -1;
+	BoutonActuel = 0;
 	
 	for (uint8_t i = 0; i < BTN_NBR; i++) 
 		Bouton[i].update(!digitalRead(BtnPin[i]));
 	
 	for (uint8_t i = 0; i < BTN_NBR; i++) {
 		if (Bouton[i].state(BTN_CLICK)) {
-			BoutonActuel = i;
+			BoutonActuel = i+1;
 			return;
 		}
 	}
@@ -72,7 +72,7 @@ YASM Veille;
 
 void veille()
 {
-	if (BoutonActuel != -1)
+	if (BoutonActuel)
 		Veille.next(veille,true); // si un bouton est appuyé on re-rentre dans l'état pour remettre à zéro le compteur
 		
 		if ( Veille.elapsed(600E3)) 
@@ -115,33 +115,34 @@ void chen()
 	static uint8_t position;
 	
 	if ( Chenillard.isFirstRun() )
-		position = 0;
+		position = 1;
 	
 	if ( Chenillard.periodic(ChenDelai) ) {
-		if ( position >= (BTN_NBR + ChenNbr) ) {
+		if ( position > (BTN_NBR + ChenNbr) ) {
 			//si on est arrivé au bout de la chenille, on stoppe le chenillard
 			Chenillard.stop();
 			//et on remet le dernière led utilisée dans son état initial
-			changeLed(0);
+			changeLed(1);
 			//puis on quitte avant de rallumer un truc
 			return;
 		}
 		
 		//basculement de l'état de la led courante
-		if ( position < BTN_NBR )
+		if ( position < BTN_NBR+1 )
 			changeLed(position);
-		else if ( position == BTN_NBR )
-			changeLed(0);
+		else if ( position == BTN_NBR+1 )
+			changeLed(1);
 		
 		//extinction de la dernière led de la chenille
 		int8_t temp = (position - ChenNbr);
-		if ( (temp) > -1)
-			if ( temp < BTN_NBR )
+		if ( (temp) > 0)
+			if ( temp < BTN_NBR+1 )
 				changeLed(temp);
-			else if ( temp == BTN_NBR )
-				changeLed(0);
+			else 
+				if ( temp == BTN_NBR+1 )
+				changeLed(1);
 			
-			position++;
+		position++;
 	}
 }
 
@@ -175,23 +176,23 @@ void prg_init()
 		toutesLeds(OFF);
 	
 	if (Programme.periodic(700)) {
-		changeLed(9);
-		changeLed(0);
+		changeLed(10);
 		changeLed(1);
 		changeLed(2);
+		changeLed(3);
 	}
 	
 	switch (BoutonActuel) {
-		case 9:
+		case 10:
 			Programme.next(prg_jeu1);
 			break;
-		case 0:
+		case 1:
 			Programme.next(prg_jeu2);
 			break;
-		case 1:
+		case 2:
 			Programme.next(prg_jeu3);
 			break;
-		case 2:
+		case 3:
 			Programme.next(prg_jeu4);
 			break;
 		/*case 3:
@@ -225,7 +226,7 @@ void prg_jeu1()
 	if (Programme.isFirstRun()) 
 		toutesLeds(OFF);
 	
-	if ( BoutonActuel != -1 ) 
+	if ( BoutonActuel ) 
 		changeLed(BoutonActuel);
 	
 	if ( toutAllume() ) {
@@ -243,13 +244,13 @@ void prg_jeu2()
 	
 	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
-		for (uint8_t i=0; i<random(9); i++)
-			changeLed(random(9));
+		for (uint8_t i=0; i<(random(9)+1); i++)
+			changeLed( random(9)+1 );
 		chenillard(50,6);
 	}
 	
-	if ( BoutonActuel != -1 ) {
-		chenillard(400, BoutonActuel+1, false);
+	if ( BoutonActuel ) {
+		chenillard(400, BoutonActuel, false);
 		Programme.next(prg_jeu2, true); //remise à zéro des compteurs de temps
 	}
 	
@@ -271,24 +272,24 @@ void prg_jeu3()
 	
 	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
-		position=0;
+		position=1;
 	}
 	
-	if ( position == 10 ) {
+	if ( position > 10 ) {
 		delay(400); //sinon c'est pas beau
 		animationFin();
 		Programme.next(prg_init);
 	}
 	
 	if ( BoutonActuel == position ) {
-		digitalWrite(LedPin[position], ON);
+		changeLed(position, ON);
 		position++;
 		return; //ici il faut quitter immédiatement sinon le test suivant annule l'action en cours !
 	}
 	
-	if ( (BoutonActuel != -1) && (BoutonActuel == (position-1)) ) {
+	if ( BoutonActuel && (BoutonActuel == (position-1)) ) {
 		position--;
-		digitalWrite(LedPin[position], OFF);
+		changeLed(position, OFF);
 	}
 	
 
@@ -296,29 +297,30 @@ void prg_jeu3()
 
 void prg_jeu4()
 {
-	//allumer l'intérieur pour autoriser extérieur
+	//allumer les deux leds de l'intérieur pour autoriser celle de l'extérieur
 	if (Programme.isFirstRun()) {
 		chenillard(20,10);
 		toutesLeds(OFF);
 	}
 	
-	if (BoutonActuel != -1) {
-		if ( (BoutonActuel & 1) )  
+	if (BoutonActuel ) {
+		if ( (BoutonActuel & 1) ) { 
 			//si le numero du bouton est impair (car en binaire le bit de poids faible est toujours 0 pour un nombre pair)
-			changeLed(BoutonActuel);
-		else {
-			//ici le bouton est pair
 			if (BoutonActuel>1) {
 				if ( etatLed(BoutonActuel-1) && etatLed(BoutonActuel+1) ) 
 					changeLed(BoutonActuel); 
 			}
 			else
-				if ( etatLed(BTN_NBR-1) && etatLed(BoutonActuel+1) ) 
+				if ( etatLed(BTN_NBR) && etatLed(BoutonActuel+1) ) 
 					changeLed(BoutonActuel);
 		}
+		else 
+			//ici le bouton est pair
+			changeLed(BoutonActuel);
 		
-		for (int8_t i=0; i<BTN_NBR; i+=2)
-			if( !(etatLed(i==0?BTN_NBR-1:i-1) && etatLed(i+1)) )
+		//et on vérifie que aucune led impaire n'est allumée si les deux paires qui l'encadrent ne le sont pas (pour l'éteindre si on a éteint une deux deux autres)
+		for (int8_t i=1; i<BTN_NBR+1; i+=2)
+			if( !(etatLed(i==1?BTN_NBR:i-1) && etatLed(i+1)) )
 				changeLed(i,OFF);
 		
 	}
