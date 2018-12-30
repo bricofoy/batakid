@@ -23,9 +23,9 @@ void toutesLeds(bool aEtat)
 		digitalWrite(LedPin[i], aEtat);
 }
 
-void changeLed(int aPin)
+void changeLed(int aNumero)
 {
-	digitalWrite(aPin, !digitalRead(aPin));	
+	digitalWrite(LedPin[aNumero], !digitalRead(LedPin[aNumero]));	
 }
 
 BTN Bouton[BTN_NBR];
@@ -101,24 +101,24 @@ void chen()
 			//si on est arrivé au bout de la chenille, on stoppe le chenillard
 			Chenillard.stop();
 			//et on remet le dernière led utilisée dans son état initial
-			changeLed(LedPin[0]);
+			changeLed(0);
 			//puis on quitte avant de rallumer un truc
 			return;
 		}
 		
 		//basculement de l'état de la led courante
 		if ( position < BTN_NBR )
-			changeLed(LedPin[position]);
+			changeLed(position);
 		else if ( position == BTN_NBR )
-			changeLed(LedPin[0]);
+			changeLed(0);
 		
 		//extinction de la dernière led de la chenille
 		int8_t temp = (position - ChenNbr);
 		if ( (temp) > -1)
 			if ( temp < BTN_NBR )
-				changeLed(LedPin[temp]);
+				changeLed(temp);
 			else if ( temp == BTN_NBR )
-				changeLed(LedPin[0]);
+				changeLed(0);
 			
 			position++;
 	}
@@ -154,10 +154,10 @@ void prg_init()
 		toutesLeds(OFF);
 	
 	if (Programme.periodic(700)) {
-		changeLed(LedPin[9]);
-		changeLed(LedPin[0]);
-		changeLed(LedPin[1]);
-		changeLed(LedPin[2]);
+		changeLed(9);
+		changeLed(0);
+		changeLed(1);
+		changeLed(2);
 	}
 	
 	switch (BoutonActuel) {
@@ -204,7 +204,7 @@ void prg_jeu1()
 		toutesLeds(OFF);
 	
 	if ( BoutonActuel != -1 ) 
-		changeLed(LedPin[BoutonActuel]);
+		changeLed(BoutonActuel);
 	
 	//test pour voir si toutes leds allumées :
 	int8_t nombre = 0;
@@ -226,7 +226,7 @@ void prg_jeu2()
 	if (Programme.isFirstRun()) {
 		toutesLeds(OFF);
 		for (uint8_t i=0; i<random(9); i++)
-			changeLed(LedPin[random(9)]);
+			changeLed(random(9));
 		chenillard(50,6);
 	}
 	
