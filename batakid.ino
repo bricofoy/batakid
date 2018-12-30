@@ -23,9 +23,30 @@ void toutesLeds(bool aEtat)
 		digitalWrite(LedPin[i], aEtat);
 }
 
-void changeLed(int aNumero)
+void changeLed(int8_t aNumero)
 {
 	digitalWrite(LedPin[aNumero], !digitalRead(LedPin[aNumero]));	
+}
+
+void changeLed(int8_t aNumero, bool aEtat)
+{
+	digitalWrite(LedPin[aNumero], aEtat);	
+}
+
+bool etatLed(int8_t aNumero)
+{
+	return digitalRead(LedPin[aNumero])==ON;
+}
+
+bool toutAllume()
+{
+	//test pour voir si toutes leds allumées :
+	int8_t nombre = 0;
+	for (int8_t i = 0; i<BTN_NBR; i++)
+		nombre += (etatLed(i)==ON);
+	if ( nombre == BTN_NBR )
+		return true;
+	return false;
 }
 
 BTN Bouton[BTN_NBR];
@@ -196,6 +217,7 @@ void prg_init()
 
 }
 
+
 void prg_jeu1()
 {	
 	//allume/éteint chaque led
@@ -206,11 +228,7 @@ void prg_jeu1()
 	if ( BoutonActuel != -1 ) 
 		changeLed(BoutonActuel);
 	
-	//test pour voir si toutes leds allumées :
-	int8_t nombre = 0;
-	for (int8_t i = 0; i<BTN_NBR; i++)
-		nombre += (digitalRead(LedPin[i])==ON);
-	if ( nombre == BTN_NBR ) {
+	if ( toutAllume() ) {
 		delay(400); //sinon c'est pas beau
 		animationFin();
 		Programme.next(prg_init);
@@ -239,11 +257,7 @@ void prg_jeu2()
 		//si 3 minutes (180*10^3 ms) sont écoulées sans actions, on quitte le jeu
 		Programme.next(prg_init);
 	
-	//test pour voir si toutes leds allumées :
-	int8_t nombre = 0;
-	for (int8_t i = 0; i<BTN_NBR; i++)
-		nombre += (digitalRead(LedPin[i])==ON);
-	if ( nombre == BTN_NBR ) {
+	if ( toutAllume() ) {
 		delay(400); //sinon c'est pas beau
 		animationFin();
 		Programme.next(prg_init);
@@ -282,20 +296,37 @@ void prg_jeu3()
 
 void prg_jeu4()
 {
-	//intérieur pour autoriser extérieur
+	//allumer l'intérieur pour autoriser extérieur
 	if (Programme.isFirstRun()) {
 		chenillard(20,10);
 		toutesLeds(OFF);
 	}
 	
 	if (BoutonActuel != -1) {
-		Serial << "bouton ! "<< BoutonActuel << " ";
-		if ( !(BoutonActuel & 1) ) { //si le numero du bouton est impair (car en binaire le bit de poids fort est toujours 0 pour un nombre pair)
+		if ( (BoutonActuel & 1) )  
+			//si le numero du bouton est impair (car en binaire le bit de poids faible est toujours 0 pour un nombre pair)
 			changeLed(BoutonActuel);
-			Serial << "pair"<<endl;
-			
+		else {
+			//ici le bouton est pair
+			if (BoutonActuel>1) {
+				if ( etatLed(BoutonActuel-1) && etatLed(BoutonActuel+1) ) 
+					changeLed(BoutonActuel); 
+			}
+			else
+				if ( etatLed(BTN_NBR-1) && etatLed(BoutonActuel+1) ) 
+					changeLed(BoutonActuel);
 		}
 		
+		for (int8_t i=0; i<BTN_NBR; i+=2)
+			if( !(etatLed(i==0?BTN_NBR-1:i-1) && etatLed(i+1)) )
+				changeLed(i,OFF);
+		
+	}
+	
+	if ( toutAllume() ) {
+		delay(400); //sinon c'est pas beau
+		animationFin();
+		Programme.next(prg_init);
 	}
 }
 
@@ -304,7 +335,10 @@ void prg_jeu5()
 	//par couleurs
 }
 
-
+void prg_jeu6()
+{
+	//addition : allumer 10, puis quand on allume un autre bouton, il faut ensuite allumer le complémentaire pour faire 10, sinon ça se re-éteinds
+}
 
 void setup()
 {
