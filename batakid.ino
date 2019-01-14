@@ -362,7 +362,11 @@ void prg_jeu6()
 		}
 		else
 			changeLed(BoutonActuel);
-		boutonPrecedent=BoutonActuel;
+		
+		if (boutonPrecedent == 0)
+			boutonPrecedent=BoutonActuel;
+		else
+			boutonPrecedent=0;
 	}
 	
 	if ( toutAllume() ) {
