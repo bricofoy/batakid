@@ -43,7 +43,8 @@ bool toutAllume()
 	//test pour voir si toutes leds sont allumées :
 	int8_t nombre = 0;
 	for (int8_t i = 1; i<=BTN_NBR; i++)
-		nombre += (etatLed(i)==ON);
+		if (etatLed(i))
+			nombre ++;
 	if ( nombre == BTN_NBR )
 		return true;
 	return false;
@@ -57,7 +58,7 @@ void lireBoutons()
 	BoutonActuel = 0;
 	
 	for (uint8_t i = 0; i < BTN_NBR; i++) 
-		Bouton[i].update(!digitalRead(BtnPin[i]));
+		Bouton[i].update(digitalRead(BtnPin[i])==LOW);
 	
 	for (uint8_t i = 0; i < BTN_NBR; i++) {
 		if (Bouton[i].state(BTN_CLICK)) {
@@ -75,10 +76,10 @@ void veille()
 	if (BoutonActuel)
 		Veille.next(veille,true); // si un bouton est appuyé on re-rentre dans l'état pour remettre à zéro le compteur
 		
-		if ( Veille.elapsed(600E3)) 
-			//Si on est dans l'état depuis 10 minutes (600*10^3millisecondes) sans actions
-			//sur les boutons, alors on met le circuit en veille : 
-			faisDodo();
+	if ( Veille.elapsed(600E3)) 
+		//Si on est dans l'état depuis 10 minutes (600*10^3millisecondes) sans actions
+		//sur les boutons, alors on met le circuit en veille : 
+		faisDodo();
 }
 
 #include <avr/sleep.h> // https://playground.arduino.cc/Learning/arduinoSleepCode
