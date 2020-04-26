@@ -14,8 +14,8 @@
 #define ON HIGH
 #define OFF LOW
 #define BTN_NBR 10
-const int8_t BtnPin[BTN_NBR] = {44, 42, 40, 38, 36, 34, 32, 30, 26, 28};
-const int8_t LedPin[BTN_NBR] = {45, 43, 41, 39, 37, 35, 33, 31, 27, 29};
+const int8_t BtnPin[BTN_NBR] = {45, 43, 41, 39, 37, 35, 33, 31, 27, 29};
+const int8_t LedPin[BTN_NBR] = {44, 42, 40, 38, 36, 34, 32, 30, 26, 28};
 
 void toutesLeds(bool aEtat)
 {
@@ -68,29 +68,47 @@ void lireBoutons()
 	}
 }
 
-/******** fonction de mise en veille *************************************************/
-YASM Veille;
+/******** gestion de l'alimentation  *************************************************/
+const int8_t pinLedAlim = 52;
+const int8_t pinBtnAlim = 50;
+const int8_t pinAlim = 48;
 
-void veille()
+BTN BoutonAlim;
+YASM Alim;
+
+void surveilleAlim()
 {
 	if (BoutonActuel)
-		Veille.next(veille,true); // si un bouton est appuyé on re-rentre dans l'état pour remettre à zéro le compteur
-		
-	if ( Veille.elapsed(600E3)) 
+		Alim.next(surveilleAlim,true); // si un bouton est appuyé on re-rentre dans l'état pour remettre à zéro le compteur
+    
+    BoutonAlim.update( digitalRead(pinBtnAlim)==HIGH );
+    if(BoutonAlim.state()==BTN_LONGCLICK)
+    {   //si on a un appui long sur le bouton d'alimentation, on éteint :
+        digitalWrite(pinLedAlim, OFF);
+		faisDodo();
+    }
+    
+	if ( Alim.elapsed(600E3) ) 
 		//Si on est dans l'état depuis 10 minutes (600*10^3millisecondes) sans actions
-		//sur les boutons, alors on met le circuit en veille : 
+		//sur les boutons, alors on éteint : 
 		faisDodo();
 }
 
-#include <avr/sleep.h> // https://playground.arduino.cc/Learning/arduinoSleepCode
 void faisDodo()
 {
-	animationFin();
-	animationFin();
+    animationOff();
 	toutesLeds(OFF);
-	set_sleep_mode(SLEEP_MODE_PWR_DOWN); 
-	sleep_enable(); 
-	sleep_mode(); // adieu mondre cruel !
+    digitalWrite(pinAlim, OFF); //Adieu monde cruel !
+}
+
+void maintienAlim()
+{
+    pinMode(pinAlim, OUTPUT);
+    digitalWrite(pinAlim, ON);
+    
+    pinMode(pinBtnAlim, INPUT);
+    pinMode(pinLedAlim, OUTPUT);
+    digitalWrite(pinLedAlim, ON);
 }
 
 /****** fonction de chenillard ******************************************************/
@@ -163,7 +181,13 @@ void animationFin()
 	delay(60);
 	toutesLeds(OFF);
 	chenillard(30,2);
-	chenillard(30,10);
+    chenillard(30,10);
+}
+
+void animationOff()
+{
+  toutesLeds(OFF);  
+  chenillard(200,10);
 }
 
 
@@ -357,15 +381,16 @@ void prg_jeu6()
 			if (boutonPrecedent+BoutonActuel==10)
 				changeLed(BoutonActuel);
 			else {
-				changeLed(BoutonActuel);
+				//changeLed(BoutonActuel);
 				changeLed(boutonPrecedent);
 			}
 		}
 		else
 			changeLed(BoutonActuel);
 		
-		if (boutonPrecedent == 0)
+		if (boutonPrecedent == 0){
 			boutonPrecedent=BoutonActuel;
+			changeLed(BoutonActuel);}
 		else
 			boutonPrecedent=0;
 	}
@@ -380,23 +405,27 @@ void prg_jeu6()
 
 void setup()
 {
+    maintienAlim();
+    
 	for (int8_t i = 0; i < BTN_NBR; i++) {
 		//paramétrage des broches utilisées
 		pinMode(LedPin[i], OUTPUT);
 		pinMode(BtnPin[i], INPUT_PULLUP);
 	}
+	
 	randomSeed(analogRead(A0));
 	
-	Serial.begin(115200); 
+	//Serial.begin(115200); 
 	animationFin();
+    
 	Programme.next(prg_init);
-	Veille.next(veille);
+	Alim.next(surveilleAlim);
 }
 
 void loop()
 {
 	lireBoutons();
-	Veille.run();
+	Alim.run();
 	Programme.run();
 	Chenillard.run();
 }
