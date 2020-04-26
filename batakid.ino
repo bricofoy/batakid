@@ -277,12 +277,7 @@ void prg_jeu2()
 	
 	if ( BoutonActuel ) {
 		chenillard(400, BoutonActuel, false);
-		Programme.next(prg_jeu2, true); //remise à zéro des compteurs de temps
 	}
-	
-	if ( Programme.elapsed(180E3))
-		//si 3 minutes (180*10^3 ms) sont écoulées sans actions, on quitte le jeu
-		Programme.next(prg_init);
 	
 	if ( toutAllume() ) {
 		delay(400); //sinon c'est pas beau
